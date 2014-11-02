@@ -1,0 +1,4 @@
+Fractals
+========
+
+Fractal image generator
