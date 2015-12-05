@@ -19,6 +19,7 @@ package AE.Fractals
 	import flash.filesystem.FileStream;
 	import flash.filesystem.FileMode;
 	import flash.utils.ByteArray;
+	import flash.utils.getTimer;
 	import flash.desktop.Clipboard;
 	import flash.desktop.ClipboardFormats;
 	import flash.events.Event;
@@ -36,8 +37,9 @@ package AE.Fractals
 		static const STAT_DRAG:int				= 1;
 		static const STAT_SELECTING_NAME:int	= 2;
 		static const STAT_GENERATING:int		= 3;
-		static const STAT_SAVING:int			= 4;
-		static const STAT_OPENING:int			= 5;
+		static const STAT_SAVE_TIMEOUT:int		= 4;
+		static const STAT_SAVING:int			= 5;
+		static const STAT_OPENING:int			= 6;
 		var state:int;
 		var export_size:int;
 		var bmp:Bitmap;
@@ -53,6 +55,8 @@ package AE.Fractals
 		var file:File;
 		var iteration_count:int;
 		var image_writer:ImageWriter;
+		var timeout:Number;
+		var last_time:int;
 		
 		public function Fractals()
 		{
@@ -71,6 +75,7 @@ package AE.Fractals
 			cont.addChild(bmp);
 			Input.Init(stage);
 			Watermark.Init(stage);
+			last_time = getTimer();
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.addEventListener(Event.RESIZE, Resize);
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, KeyboardEv);
@@ -163,7 +168,7 @@ package AE.Fractals
 					file_stream.writeUTFBytes(transformations.GetInfo());
 					file_stream.close();
 					//Prepare for generation
-					gui.t_info.text = "Preparing";
+					gui.t_info.text = "Preparing " + export_size;
 					transformations.Prepare(export_size);
 					iteration_count = fractal.total_iterations;
 					fractal.Draw(export_size, 0);
@@ -186,10 +191,8 @@ package AE.Fractals
 			}
 		}
 		
-		function WriteFiles()
+		function PrepareImageWriter()
 		{
-			//Save image
-			state = STAT_SAVING;
 			transformations.Prepare(size);	//Reset transformations
 			image_writer = new ImageWriter(fractal.data, file);
 			gui.t_info.text = image_writer.msg;
@@ -255,6 +258,10 @@ package AE.Fractals
 				export_size = 8192;
 				SaveImg();
 			}
+			else if(gui.btn_save_12.hitTestPoint(Input.mouse_pos.x, Input.mouse_pos.y)){
+				export_size = 12288;
+				SaveImg();
+			}
 			else if(gui.btn_save_16.hitTestPoint(Input.mouse_pos.x, Input.mouse_pos.y)){
 				export_size = 16384;
 				SaveImg();
@@ -269,6 +276,10 @@ package AE.Fractals
 		
 		function Update(ev:Event)
 		{
+			var _curr_time:int = getTimer();
+			var dt:Number = Number(_curr_time - last_time) / 1000.0;
+			last_time = _curr_time;
+			
 			switch(state){
 				case STAT_ENABLED:
 					gui.Update();
@@ -307,12 +318,26 @@ package AE.Fractals
 							fractal.DrawIteration();
 						}
 						else{
-							WriteFiles();
+							if(export_size < 10000){
+								timeout = 0.5;
+							}
+							else{
+								timeout = 5.0;
+							}
+							fractal.EndDraw();
+							PrepareImageWriter();
+							state = STAT_SAVE_TIMEOUT;
 						}
 					}
 					else if(fractal.state == Fractal.STAT_ERROR){
 						gui.t_info.text = "Error: not enough free memory";
 						state = STAT_ENABLED;
+					}
+					break;
+				case STAT_SAVE_TIMEOUT:
+					timeout -= dt;
+					if(timeout <= 0.0){
+						state = STAT_SAVING;
 					}
 					break;
 				case STAT_SAVING:
@@ -325,6 +350,8 @@ package AE.Fractals
 					else{
 						image_writer.Iterate();
 						gui.t_info.text = image_writer.msg;
+						timeout = 1.0;
+						state = STAT_SAVE_TIMEOUT;
 					}
 					break;
 				case STAT_OPENING:

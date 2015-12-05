@@ -102,7 +102,7 @@ package AE.Fractals
 					value = start_value + pos * 0.2;
 				}
 				else if(type == Transformation.ROTATION){
-					value = start_pos + pos * Math.abs(pos);
+					value = start_value + pos * Math.abs(pos);
 					while(value < -180.0){
 						value += 360.0;
 					}

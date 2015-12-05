@@ -59,7 +59,7 @@ package AE.Fractals
 			var _data:ByteArray = PNGEncoder.encode(_bmp);
 			//var _data:ByteArray = fractal.data.getPixels(new Rectangle(0, 0, fractal.data.width, fractal.data.height));
 			if(x_count > 1 || y_count > 1){
-				var _url = path.replace(".png", "_" + String(y_pos * x_count + x_pos + 1) + ".png");
+				var _url = path.replace(".png", "_" + String(x_pos + 1) + "-" + String(y_pos + 1) + ".png");
 				file.url = _url;
 			}
 			var file_stream:FileStream = new FileStream();

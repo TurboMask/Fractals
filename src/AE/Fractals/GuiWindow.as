@@ -27,7 +27,7 @@ package AE.Fractals
 		
 		public function GuiWindow()
 		{
-			buttons = Vector.<MovieClip>([btn_color, btn_full, btn_controls, btn_save_4, btn_save_8, btn_save_16, btn_open]);
+			buttons = Vector.<MovieClip>([btn_color, btn_full, btn_controls, btn_save_4, btn_save_8, btn_save_12, btn_save_16, btn_open]);
 			for(var i:int = 0; i < buttons.length; i++){
 				buttons[i].buttonMode = true;
 			}

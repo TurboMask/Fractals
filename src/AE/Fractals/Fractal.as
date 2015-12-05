@@ -26,7 +26,6 @@ package AE.Fractals
 		public var transformations:Vector.<Matrix>;
 		public var colors:Vector.<ColorTransform>;
 		public var total_iterations:int;
-		var data_empty:BitmapData;
 		var size:Number;
 		
 		public function Fractal()
@@ -37,30 +36,37 @@ package AE.Fractals
 		
 		public function Draw(_size:Number, _iterations:int):BitmapData
 		{
-			//trace("Fractal.Draw: " + _size);
+			trace("Fractal.Draw: " + _size);
 			state = STAT_WORKING;
 			size = _size;
 			if(_iterations < 0){
 				_iterations = total_iterations;
 			}
 			total_iterations = 0;
-			data_empty = new BitmapData(size, size, true, 0x00FFFFFF);
-			if(data_empty == null){
+			
+			trace("Clone");
+			if(data != null){
+				data.dispose();
+				data = null;
+			}
+			EndDraw();
+			try{ data = new BitmapData(size, size, true, 0x00FFFFFF); }
+			catch(err:Error){
+				trace("Fractal.Draw: clone operation failed");
+				state = STAT_ERROR;
+				return null;
+			}
+			if(data == null){
 				trace("Bitmap data not created");
 				state = STAT_ERROR;
 				return null;
 			}
-			if(data_empty.width <= 0 || data_empty.height <= 0){
-				state = STAT_ERROR;
-				return null;
-			}
-			try{ data = data_empty.clone(); }
-			catch(err:Error){
+			if(data.width <= 0 || data.height <= 0){
 				state = STAT_ERROR;
 				return null;
 			}
 			data.fillRect(new Rectangle(size / 4.0, size / 4.0, size / 2.0, size / 2.0), 0xFF000000);
-			data2 = data_empty.clone();
+			data2 = new BitmapData(size, size, true, 0x00FFFFFF);
 			
 			for(var i:int = 0; i < _iterations; i++){
 				DrawIteration();
@@ -71,9 +77,12 @@ package AE.Fractals
 		
 		public function DrawIteration():BitmapData
 		{
+			if(data == null || data2 == null){
+				return null;
+			}
 			state = STAT_WORKING;
 			++total_iterations;
-			data2.copyPixels(data_empty, new Rectangle(0, 0, size, size), new Point(0, 0));
+			data2.fillRect(new Rectangle(0, 0, size, size), 0x00FFFFFF); 
 			for(var i:int = 0; i < transformations.length; i++){
 				data2.draw(data, transformations[i], colors[i], null, null, true);
 			}
@@ -82,6 +91,14 @@ package AE.Fractals
 			data2 = tmp;
 			state = STAT_READY;
 			return data;
+		}
+		
+		public function EndDraw()
+		{
+			if(data2 != null){
+				data2.dispose();
+				data2 = null;
+			}
 		}
 	}
 }
