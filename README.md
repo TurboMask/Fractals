@@ -8,13 +8,14 @@ With this tool you can:
 - Tune color and shape
 - Save configurations to XML
 - Open saved configurations
-- Export as PNG images
+- Export fractals as PNG images
 
 Images are exported with alpha channel, without background.
 Supported image sizes:
 - 4k (4096x4096)
 - 8k (8192x8192)
-- 16k (16384x16384, requires lots of RAM)
+- 12k (12288x12288)
+- 16k (16384x16384, requires lots of RAM and is not supported on all systems)
 
 Here are some examples generated with this tool: [http://cgart.lt/index.php?i=133](http://cgart.lt/index.php?i=133)
 
